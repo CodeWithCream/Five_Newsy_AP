@@ -11,6 +11,8 @@
         //1-N
         public IList<Article> Articles { get; private set; } = new List<Article>();
 
+        protected Author() : base() { }
+
         public Author(string firstName, string lastName, string eMail) : base(firstName, lastName, eMail)
         {
         }

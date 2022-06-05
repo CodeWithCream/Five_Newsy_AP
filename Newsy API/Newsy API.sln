@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Newsy_API.Model", "Newsy_AP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Newsy_API.AuthenticationModel", "Newsy_API.AuthenticationModel\Newsy_API.AuthenticationModel.csproj", "{B300A17B-C2A4-4579-A51F-6DC33223DF29}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Newsy_API.DAL", "Newsy_API.DAL\Newsy_API.DAL.csproj", "{DDC9A0F1-BF84-40CB-87B9-BED172C1388A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{B300A17B-C2A4-4579-A51F-6DC33223DF29}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B300A17B-C2A4-4579-A51F-6DC33223DF29}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B300A17B-C2A4-4579-A51F-6DC33223DF29}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DDC9A0F1-BF84-40CB-87B9-BED172C1388A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DDC9A0F1-BF84-40CB-87B9-BED172C1388A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DDC9A0F1-BF84-40CB-87B9-BED172C1388A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DDC9A0F1-BF84-40CB-87B9-BED172C1388A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
