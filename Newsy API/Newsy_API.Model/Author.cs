@@ -8,7 +8,8 @@
         public string Biography { get; set; } = string.Empty;
         public string Tagline { get; set; } = string.Empty;
 
-        public List<Article> Articles { get; private set; } = new List<Article>();
+        //1-N
+        public IList<Article> Articles { get; private set; } = new List<Article>();
 
         public Author(string firstName, string lastName, string eMail) : base(firstName, lastName, eMail)
         {
