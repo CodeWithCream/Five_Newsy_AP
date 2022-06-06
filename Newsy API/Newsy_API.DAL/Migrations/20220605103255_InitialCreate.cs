@@ -202,14 +202,14 @@ namespace Newsy_API.DAL.Migrations
                 });
 
             migrationBuilder.InsertData(
-                table: "AspNetRoles",
-                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
-                values: new object[] { "19798680-abd7-4666-9a8b-bfd7bafcaccd", "fb0ed8f2-6544-4104-b763-e51fa1030e80", "Reader", "reader" });
+             table: "AspNetRoles",
+             columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+             values: new object[] { "9c56449f-7a1f-4d22-bbc7-832e84a34fef", "4714a715-3823-4faf-8ecb-72dcaaf4c9a2", "Author", "author" });
 
             migrationBuilder.InsertData(
                 table: "AspNetRoles",
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
-                values: new object[] { "c743a70e-0c34-4d62-ba32-cd8ae9fcbb42", "491a6ca5-c7c7-4536-b74b-1e5db16002bf", "Author", "author" });
+                values: new object[] { "c85a227d-5d56-4403-b5be-7d96b132ca50", "3d0134eb-c25a-4552-8efa-694b7231a127", "Reader", "reader" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Articles_AuthorId",

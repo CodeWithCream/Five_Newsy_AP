@@ -8,8 +8,10 @@ namespace Newsy_API.Model
     public class Article : Entity
     {
         [Required]
-        public string Title { get; set; } = string.Empty;
-        public string Text { get; set; } = string.Empty;
+        public string Title { get; protected set; } = string.Empty;
+        public string Text { get; protected set; } = string.Empty;
+        public DateTime Created { get; protected set; }
+        public DateTime Edited { get; protected set; }
 
         [Required]
         public long? AuthorId { get; set; }
@@ -23,6 +25,14 @@ namespace Newsy_API.Model
         {
             Title = title;
             Author = author;
+            Created = DateTime.UtcNow;
+        }
+
+        public void ChangeContent(string title, string text)
+        {
+            Title = title;
+            Text = text;
+            Edited = DateTime.UtcNow;
         }
     }
 }

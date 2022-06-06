@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Newsy_API.DAL;
 
@@ -11,9 +12,10 @@ using Newsy_API.DAL;
 namespace Newsy_API.DAL.Migrations
 {
     [DbContext(typeof(NewsyDbContext))]
-    partial class NewsyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220606191447_ArticleDates")]
+    partial class ArticleDates
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
