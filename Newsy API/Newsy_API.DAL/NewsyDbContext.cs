@@ -8,9 +8,8 @@ namespace Newsy_API.DAL
 {
     public class NewsyDbContext : IdentityDbContext<ApplicationUser>
     {
-        public DbSet<Author>? Authors { get; set; }
-
-        public DbSet<Article>? Articles { get; set; }
+        public DbSet<Author> Authors { get; set; } = null!;
+        public DbSet<Article> Articles { get; set; } = null!;
 
         public NewsyDbContext(DbContextOptions options) : base(options)
         {
