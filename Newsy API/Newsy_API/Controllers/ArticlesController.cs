@@ -79,5 +79,52 @@ namespace Newsy_API.Controllers
 
             return CreatedAtAction(nameof(GetArticle), new { id = articleToCreate.Id }, createdArticleDto);
         }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> EditRArticle(long id, EditArticleDto editArticleDto)
+        {
+            if (id != editArticleDto.Id)
+            {
+                return BadRequest();
+            }
+
+            _logger.LogInformation($"Updating article: {JsonConvert.SerializeObject(editArticleDto)}");
+
+            var article = await _context.Articles.FindAsync(id);
+            if (article == null)
+            {
+                _logger.LogWarning($"Article with id '{id}' does not exist,");
+                return NotFound();
+            }
+
+            article.ChangeContent(editArticleDto.Title, editArticleDto.Text);
+            _context.Entry(article).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ArticleExists(id))
+                {
+                    _logger.LogError($"Article with id '{id}' does not exist,");
+                    return NotFound();
+                }
+                throw;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error while updating article.");
+                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+            }
+
+            return NoContent();
+        }
+
+        private bool ArticleExists(long id)
+        {
+            return _context.Articles.Any(article => article.Id == id);
+        }
     }
 }
