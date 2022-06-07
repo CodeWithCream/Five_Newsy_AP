@@ -51,7 +51,7 @@ namespace Newsy_API.Controllers
                 return NotFound();
             }
 
-            return _mapper.Map<ArticleDto>(article);
+            return new OkObjectResult(_mapper.Map<ArticleDto>(article));
         }
 
         [HttpPost]
