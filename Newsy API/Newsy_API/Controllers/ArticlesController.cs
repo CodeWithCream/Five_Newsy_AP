@@ -122,6 +122,39 @@ namespace Newsy_API.Controllers
             return NoContent();
         }
 
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(long id)
+        {
+            var articleToDelete = await _context.Articles.FindAsync(id);
+            if (articleToDelete == null)
+            {
+                _logger.LogError($"Article with id '{id}' does not exist,");
+                return NotFound();
+            }
+
+            _context.Articles.Remove(articleToDelete);
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ArticleExists(id))
+                {
+                    //already deleted
+                    return new StatusCodeResult(StatusCodes.Status200OK);
+                }
+                throw;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error while deleting article.");
+                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+            }
+
+            return new StatusCodeResult(StatusCodes.Status200OK);
+        }
+
         private bool ArticleExists(long id)
         {
             return _context.Articles.Any(article => article.Id == id);
