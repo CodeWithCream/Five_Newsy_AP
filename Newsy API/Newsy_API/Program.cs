@@ -26,6 +26,14 @@ builder.Services.AddDbContext<NewsyDbContext>(options =>
 //configure automapper
 builder.Services.AddAutoMapper(typeof(Program));
 
+builder.Logging.AddSimpleConsole(options =>
+{
+    options.IncludeScopes = true;
+    options.SingleLine = false;
+    options.TimestampFormat = "dd.MM.yyyy hh:mm:ss ";
+    options.ColorBehavior = Microsoft.Extensions.Logging.Console.LoggerColorBehavior.Enabled;
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
