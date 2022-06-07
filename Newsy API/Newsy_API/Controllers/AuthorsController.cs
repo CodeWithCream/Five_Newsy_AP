@@ -2,9 +2,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newsy_API.DAL;
-using Newsy_API.DTOs;
 using Newsy_API.Model;
 using Microsoft.EntityFrameworkCore;
+using Newsy_API.DTOs.Author;
 
 namespace Newsy_API.Controllers
 {

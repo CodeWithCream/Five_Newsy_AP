@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
-using Newsy_API.DTOs;
+using Newsy_API.DTOs.Article;
+using Newsy_API.DTOs.Author;
 using Newsy_API.Model;
 
 namespace Newsy_API.Mappings
@@ -8,7 +9,10 @@ namespace Newsy_API.Mappings
     {
         public MapperProfile()
         {
+            CreateMap<Author, AuthorBasicDto>();
             CreateMap<Author, AuthorDto>();
+
+            CreateMap<Article, ArticleDto>();
         }
     }
 }
