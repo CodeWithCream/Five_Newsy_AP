@@ -13,6 +13,8 @@ namespace Newsy_API.Mappings
             CreateMap<Author, AuthorDto>();
 
             CreateMap<Article, ArticleDto>();
+            CreateMap<CreateArticleDto, Article>()
+                .ConstructUsing(src => new Article(src.Title, src.Text, src.AuthorId));
         }
     }
 }

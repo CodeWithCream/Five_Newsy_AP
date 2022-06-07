@@ -4,6 +4,7 @@ namespace Newsy_API.DTOs.Article
 {
     public class ArticleDto
     {
+        public long Id { get; set; }
         public string Title { get; protected set; } = string.Empty;
         public string Text { get; protected set; } = string.Empty;
         public DateTime Created { get; protected set; }

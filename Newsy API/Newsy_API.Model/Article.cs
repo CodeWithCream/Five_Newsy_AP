@@ -14,18 +14,20 @@ namespace Newsy_API.Model
         public DateTime Edited { get; protected set; }
 
         [Required]
-        public long? AuthorId { get; set; }
+        public long? AuthorId { get; protected set; }
         public Author? Author { get; protected set; }
 
         protected Article()
         {
         }
 
-        public Article(string title, Author author) : base()
+        public Article(string title, string text, long authorId) : base()
         {
             Title = title;
-            Author = author;
+            AuthorId = authorId;
+            Text = text;
             Created = DateTime.UtcNow;
+            Edited = Created;
         }
 
         public void ChangeContent(string title, string text)
