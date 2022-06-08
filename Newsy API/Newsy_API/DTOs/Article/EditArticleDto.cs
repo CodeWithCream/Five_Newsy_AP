@@ -4,8 +4,6 @@ namespace Newsy_API.DTOs.Article
 {
     public class EditArticleDto
     {
-        public long Id { get; set; }
-
         [Required(AllowEmptyStrings = false)]
         public string Title { get; set; } = null!;
 

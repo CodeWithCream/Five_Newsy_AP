@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Newsy_API.DAL;
+using Newsy_API.DAL.Exceptions;
+using Newsy_API.DAL.Repositories;
 using Newsy_API.DTOs;
 using Newsy_API.DTOs.Article;
 using Newsy_API.Model;
@@ -16,176 +16,154 @@ namespace Newsy_API.Controllers
     [ApiController]
     public class ArticlesController : ControllerBase
     {
-        private readonly NewsyDbContext _context;
+        private readonly IArticleRepository _repository;
         private readonly IMapper _mapper;
         private readonly ILogger<ArticlesController> _logger;
 
-        public ArticlesController(NewsyDbContext context, IMapper mapper, ILogger<ArticlesController> logger)
+        public ArticlesController(IArticleRepository repository, IMapper mapper, ILogger<ArticlesController> logger)
         {
-            _context = context;
+            _repository = repository;
             _mapper = mapper;
             _logger = logger;
         }
 
-        /// <summary>
-        /// Retrieve a list of article on given page 
-        /// </summary>
-        /// <param name="filter">Pagination parameters - page number and page size</param>
-        /// <returns>Articles on requested page</returns>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<PagedResult<IEnumerable<ArticleDto>>>> GetArticles([FromQuery] PaginationFilter filter)
         {
-            var articlesCount = await _context.Articles.CountAsync();
+            var articlesCount = await _repository.CountAsync();
             var totalPages = (int)Math.Ceiling(articlesCount * 1.0 / filter.PageSize);
 
             if (filter.PageNumber > totalPages)
             {
                 _logger.LogError(
-                    $"Requesting page {filter.PageNumber} with pagesize of {filter.PageSize}, but there are only {articlesCount} articles saved");
+                    $"Requesting page {filter.PageNumber} with pagesize of {filter.PageSize}, but there are not enough articles.");
                 return new BadRequestResult();
             }
 
-            var articles = await _context.Articles
-                .Include(article => article.Author)
-                .OrderBy(article => article.Created)
-                .Skip((filter.PageNumber - 1) * filter.PageSize)
-                .Take(filter.PageSize)
-                .ToListAsync();
+            var articles = await _repository.GetAllAsync(filter.PageSize, filter.PageNumber);
 
-            _logger.LogInformation($"{articlesCount} articles found. Sending {articles.Count} articles on page {filter.PageNumber}");
+            _logger.LogInformation($"{articlesCount} articles found. Sending {articles.Count()} articles on page {filter.PageNumber}");
 
             var filteredArticles = _mapper.Map<IEnumerable<Article>, IEnumerable<ArticleDto>>(articles);
 
             return new OkObjectResult(
                 new PagedResult<IEnumerable<ArticleDto>>(filteredArticles,
                     filter.PageNumber,
-                    articles.Count,
+                    articles.Count(),
                     totalPages,
                     articlesCount));
         }
 
         [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<ArticleDto>> GetArticle(long id)
         {
-            var article = await _context.Articles
-                .Include(article => article.Author)
-                .SingleOrDefaultAsync(article => article.Id == id);
-
-            if (article == null)
+            try
             {
-                _logger.LogWarning($"Article with id '{id}' does not exist.");
-                return NotFound();
+                var article = await _repository.GetByIdAsync(id);
+                return new OkObjectResult(_mapper.Map<ArticleDto>(article));
             }
-
-            return new OkObjectResult(_mapper.Map<ArticleDto>(article));
+            catch (NotFoundException)
+            {
+                _logger.LogWarning($"Article with id={id} does not exist.");
+                return NotFound(id);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"Error while trying to get article with id={id}");
+                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+            }
         }
+
 
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<ActionResult<CreateArticleDto>> PostReport(CreateArticleDto createArticleDto)
         {
-            _logger.LogInformation($"Creating new article: {JsonConvert.SerializeObject(createArticleDto)}");
+            _logger.LogInformation($"Creating new article: {JsonConvert.SerializeObject(createArticleDto)}.");
 
             var articleToCreate = _mapper.Map<Article>(createArticleDto);
-
-            _context.Articles.Add(articleToCreate);
             try
             {
-                await _context.SaveChangesAsync();
+                await _repository.InsertAsync(articleToCreate);
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Error while creating article.");
+                _logger.LogError(e, e.Message);
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
 
-            var cretaedArticle = await _context.Articles
-                .Include(article => article.Author)
-                .SingleOrDefaultAsync(article => article.Id == articleToCreate.Id);
-            var createdArticleDto = _mapper.Map<ArticleDto>(cretaedArticle);
-
-            return CreatedAtAction(nameof(GetArticle), new { id = articleToCreate.Id }, createdArticleDto);
+            try
+            {
+                var createdArticle = await _repository.GetByIdAsync(articleToCreate.Id);
+                var createdArticleDto = _mapper.Map<ArticleDto>(createdArticle);
+                return CreatedAtAction(nameof(GetArticle), new { id = articleToCreate.Id }, createdArticleDto);
+            }
+            catch (NotFoundException) //someone deleted it
+            {
+                _logger.LogWarning("Someone deleted created article.");
+                return new StatusCodeResult(StatusCodes.Status409Conflict);
+            }
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> EditRArticle(long id, EditArticleDto editArticleDto)
+        [HttpPatch("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        public async Task<IActionResult> EditArticle(long id, EditArticleDto editArticleDto)
         {
-            if (id != editArticleDto.Id)
-            {
-                return BadRequest();
-            }
-
             _logger.LogInformation($"Updating article: {JsonConvert.SerializeObject(editArticleDto)}");
-
-            var article = await _context.Articles.FindAsync(id);
-            if (article == null)
-            {
-                _logger.LogWarning($"Article with id '{id}' does not exist,");
-                return NotFound();
-            }
-
-            article.ChangeContent(editArticleDto.Title, editArticleDto.Text);
-            _context.Entry(article).State = EntityState.Modified;
 
             try
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ArticleExists(id))
-                {
-                    _logger.LogError($"Article with id '{id}' does not exist,");
-                    return NotFound();
-                }
-                throw;
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Error while updating article.");
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            }
+                await _repository.UpdateAsync(id, editArticleDto.Title, editArticleDto.Text);
+                _logger.LogInformation($"Article is updated.");
 
-            return NoContent();
+                return NoContent();
+            }
+            catch (NotFoundException)
+            {
+                _logger.LogWarning($"Article with id={id} does not exist.");
+                return NotFound(id);
+            }
+            catch (ConflictException)
+            {
+                _logger.LogError($"Update article conflict. Article is probably not updated.");
+                return new StatusCodeResult(StatusCodes.Status409Conflict);
+            }
         }
 
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Delete(long id)
         {
-            var articleToDelete = await _context.Articles.FindAsync(id);
-            if (articleToDelete == null)
-            {
-                _logger.LogError($"Article with id '{id}' does not exist,");
-                return NotFound();
-            }
+            _logger.LogInformation($"Deleting article with id={id}.");
 
-            _context.Articles.Remove(articleToDelete);
             try
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ArticleExists(id))
-                {
-                    //already deleted
-                    return new StatusCodeResult(StatusCodes.Status200OK);
-                }
-                throw;
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Error while deleting article.");
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            }
+                await _repository.DeleteAsync(id);
+                _logger.LogInformation($"Article is deleted.");
 
-            return new StatusCodeResult(StatusCodes.Status200OK);
-        }
-
-        private bool ArticleExists(long id)
-        {
-            return _context.Articles.Any(article => article.Id == id);
+                return Ok();
+            }
+            catch (NotFoundException)
+            {
+                _logger.LogWarning($"Article with id={id} does not exist.");
+                return NotFound(id);
+            }
+            catch (ConflictException)
+            {
+                //someone already deleted it
+                _logger.LogWarning($"Delete article conflict. Article is already deleted.");
+                return new StatusCodeResult(StatusCodes.Status200OK);
+            }
         }
     }
 }

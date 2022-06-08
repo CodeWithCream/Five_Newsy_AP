@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newsy_API.DAL;
-using Newsy_API.Model;
-using Microsoft.EntityFrameworkCore;
-using Newsy_API.DTOs.Author;
+using Newsy_API.DAL.Exceptions;
+using Newsy_API.DAL.Repositories;
 using Newsy_API.DTOs.Article;
+using Newsy_API.DTOs.Author;
+using Newsy_API.Model;
 
 namespace Newsy_API.Controllers
 {
@@ -13,59 +13,70 @@ namespace Newsy_API.Controllers
     [ApiController]
     public class AuthorsController : ControllerBase
     {
-        private readonly NewsyDbContext _context;
+        private readonly IAuthorRepository _repository;
         private readonly IMapper _mapper;
         private readonly ILogger<AuthorsController> _logger;
 
-        public AuthorsController(NewsyDbContext context, IMapper mapper, ILogger<AuthorsController> logger)
+        public AuthorsController(IAuthorRepository repository, IMapper mapper, ILogger<AuthorsController> logger)
         {
-            _context = context;
+            _repository = repository;
             _mapper = mapper;
             _logger = logger;
         }
 
         [AllowAnonymous]
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<AuthorDto>>> GetAuthors()
         {
-            var authors = await _context.Authors.ToListAsync();
+            var authors = await _repository.GetAllAsync();
 
-            _logger.LogInformation($"{authors.Count} authors found.");
+            _logger.LogInformation($"{authors.Count()} authors found.");
 
             return new OkObjectResult(_mapper.Map<IEnumerable<Author>, IEnumerable<AuthorBasicDto>>(authors));
         }
 
         [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<IEnumerable<AuthorDto>>> GetAuthor(long id)
         {
-            var author = await _context.Authors
-                .SingleOrDefaultAsync(author => author.Id == id);
-
-            if (author == null)
+            try
             {
-                _logger.LogWarning($"Author with id '{id}' does not exist.");
-                return NotFound();
+                var author = await _repository.GetByIdAsync(id);
+                return new OkObjectResult(_mapper.Map<AuthorDto>(author));
             }
-
-            return new OkObjectResult(_mapper.Map<AuthorDto>(author));
+            catch (NotFoundException)
+            {
+                _logger.LogWarning($"Author with id={id} does not exist.");
+                return NotFound(id);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"Error while trying to get author with id={id}");
+                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+            }
         }
 
         [HttpGet("{id}/articles")]
         public async Task<ActionResult<IEnumerable<ArticleDto>>> GetArticles(long id)
         {
-            var author = await _context.Authors
-                .Include(author => author.Articles)
-                .SingleOrDefaultAsync(author => author.Id == id);
-
-            if (author == null)
+            try
             {
-                _logger.LogWarning($"Author with id '{id}' does not exist.");
-                return NotFound();
+                var author = await _repository.GetByIdAsync(id, true);
+                return new OkObjectResult(_mapper.Map<IEnumerable<Article>, IEnumerable<ArticleDto>>(author.Articles));
             }
-
-            _logger.LogInformation($"Author has {author.Articles.Count} articles.");
-
-            return new OkObjectResult(_mapper.Map<IEnumerable<Article>, IEnumerable<ArticleDto>>(author.Articles));
+            catch (NotFoundException)
+            {
+                _logger.LogWarning($"Author with id={id} does not exist.");
+                return NotFound(id);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"Error while trying to get articles of author with id={id}");
+                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+            }
         }
     }
 }

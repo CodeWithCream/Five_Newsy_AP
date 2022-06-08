@@ -14,7 +14,7 @@ namespace Newsy_API.Model
         public DateTime Edited { get; protected set; }
 
         [Required]
-        public long? AuthorId { get; protected set; }
+        public long? AuthorId { get; set; }
         public Author? Author { get; protected set; }
 
         protected Article()

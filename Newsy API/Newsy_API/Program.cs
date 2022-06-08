@@ -1,8 +1,8 @@
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using Newsy_API.DAL;
+using Newsy_API.DAL.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -23,9 +23,16 @@ builder.Services.AddDbContext<NewsyDbContext>(options =>
     options.UseSqlServer(configuration.GetConnectionString("DatabaseConnection"));
 });
 
+//configure repositories
+builder.Services.AddScoped<IArticleRepository, ArticleRepository>();
+builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
+
+
 //configure automapper
 builder.Services.AddAutoMapper(typeof(Program));
 
+//configure logging
+//TODO: can be done better and easier to read
 builder.Logging.AddSimpleConsole(options =>
 {
     options.IncludeScopes = true;
