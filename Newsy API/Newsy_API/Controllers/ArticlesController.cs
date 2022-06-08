@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newsy_API.DAL;
+using Newsy_API.DTOs;
 using Newsy_API.DTOs.Article;
 using Newsy_API.Model;
 using Newtonsoft.Json;
@@ -11,6 +12,7 @@ namespace Newsy_API.Controllers
 {
     [AllowAnonymous]
     [Route("api/[controller]")]
+    [Produces("application/json")]
     [ApiController]
     public class ArticlesController : ControllerBase
     {
@@ -25,17 +27,43 @@ namespace Newsy_API.Controllers
             _logger = logger;
         }
 
+        /// <summary>
+        /// Retrieve a list of article on given page 
+        /// </summary>
+        /// <param name="filter">Pagination parameters - page number and page size</param>
+        /// <returns>Articles on requested page</returns>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ArticleDto>>> GetArticles()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<PagedResult<IEnumerable<ArticleDto>>>> GetArticles([FromQuery] PaginationFilter filter)
         {
+            var articlesCount = await _context.Articles.CountAsync();
+            var totalPages = (int)Math.Ceiling(articlesCount * 1.0 / filter.PageSize);
+
+            if (filter.PageNumber > totalPages)
+            {
+                _logger.LogError(
+                    $"Requesting page {filter.PageNumber} with pagesize of {filter.PageSize}, but there are only {articlesCount} articles saved");
+                return new BadRequestResult();
+            }
+
             var articles = await _context.Articles
                 .Include(article => article.Author)
                 .OrderBy(article => article.Created)
+                .Skip((filter.PageNumber - 1) * filter.PageSize)
+                .Take(filter.PageSize)
                 .ToListAsync();
 
-            _logger.LogInformation($"{articles.Count} articles found.");
+            _logger.LogInformation($"{articlesCount} articles found. Sending {articles.Count} articles on page {filter.PageNumber}");
 
-            return new OkObjectResult(_mapper.Map<IEnumerable<Article>, IEnumerable<ArticleDto>>(articles));
+            var filteredArticles = _mapper.Map<IEnumerable<Article>, IEnumerable<ArticleDto>>(articles);
+
+            return new OkObjectResult(
+                new PagedResult<IEnumerable<ArticleDto>>(filteredArticles,
+                    filter.PageNumber,
+                    articles.Count,
+                    totalPages,
+                    articlesCount));
         }
 
         [HttpGet("{id}")]
