@@ -10,6 +10,11 @@ namespace Newsy_API.DTOs.Article
         [Required(AllowEmptyStrings = false)]
         public string Text { get; set; } = null!;
 
-        public long AuthorId { get; set; }
+        public long AuthorId { get; private set; }
+
+        public void SetAuthor(long authorId)
+        {
+            AuthorId = authorId;
+        }
     }
 }

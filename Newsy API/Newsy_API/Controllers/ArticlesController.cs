@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Newsy_API.AuthenticationModel;
 using Newsy_API.DAL.Exceptions;
 using Newsy_API.DAL.Repositories.Articles;
 using Newsy_API.DTOs;
@@ -18,12 +20,14 @@ namespace Newsy_API.Controllers
         private readonly IArticleRepository _repository;
         private readonly IMapper _mapper;
         private readonly ILogger<ArticlesController> _logger;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public ArticlesController(IArticleRepository repository, IMapper mapper, ILogger<ArticlesController> logger)
+        public ArticlesController(IArticleRepository repository, IMapper mapper, ILogger<ArticlesController> logger, UserManager<ApplicationUser> userManager)
         {
             _repository = repository;
             _mapper = mapper;
             _logger = logger;
+            _userManager = userManager;
         }
 
         [Authorize]
@@ -87,7 +91,10 @@ namespace Newsy_API.Controllers
         {
             _logger.LogInformation($"Creating new article: {JsonConvert.SerializeObject(createArticleDto)}.");
 
+            var applicationUser = await _userManager.GetUserAsync(HttpContext.User);
+            createArticleDto.SetAuthor(applicationUser.UserRefId);
             var articleToCreate = _mapper.Map<Article>(createArticleDto);
+
             try
             {
                 await _repository.InsertAsync(articleToCreate);
