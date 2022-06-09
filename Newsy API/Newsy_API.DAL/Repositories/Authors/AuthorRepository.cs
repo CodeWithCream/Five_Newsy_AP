@@ -77,5 +77,25 @@ namespace Newsy_API.DAL.Repositories.Authors
 
             _logger.LogInformation("Author deleted.");
         }
+
+        public async Task UpdateAsync(long id, string tagline, string biography)
+        {
+            _logger.LogInformation($"Update author whith id={id}.");
+
+            var author = await _context.Authors.FindAsync(id);
+            if (author == null)
+            {
+                _logger.LogError($"Author with id '{id}' does not exist.");
+                throw new NotFoundException();
+            }
+
+            author.Biography = biography;
+            author.Tagline = tagline;
+            _context.Entry(author).State = EntityState.Modified;
+
+            await SaveAsync();
+
+            _logger.LogInformation("Author updated.");
+        }
     }
 }

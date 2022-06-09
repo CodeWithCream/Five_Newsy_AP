@@ -1,28 +1,25 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Newsy_API.AuthenticationModel;
-using Newsy_API.DAL.Repositories.Articles;
 
 namespace Newsy_API.Helpers
 {
     /// <summary>
-    /// Requirement that operation can be done only on articles created by author who is executing them
+    /// Requirement that operation can be done only if data belongs to user executing it
     /// </summary>
-    public class MyArticlesRequirement : IAuthorizationRequirement
+    public class MyDataRequirement : IAuthorizationRequirement
     {
     }
 
-    public class MyArticlesRequirementHandler : AuthorizationHandler<MyArticlesRequirement>
+    public class MyDataRequirementHandler : AuthorizationHandler<MyDataRequirement>
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IArticleRepository _repository;
 
-        public MyArticlesRequirementHandler(IHttpContextAccessor httpContextAccessor, UserManager<ApplicationUser> userManager, IArticleRepository repository)
+        public MyDataRequirementHandler(IHttpContextAccessor httpContextAccessor, UserManager<ApplicationUser> userManager)
         {
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
             _userManager = userManager;
-            _repository = repository;
         }
 
         private HttpContext HttpContext
@@ -33,15 +30,13 @@ namespace Newsy_API.Helpers
             }
         }
 
-        protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, MyArticlesRequirement requirement)
+        protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, MyDataRequirement requirement)
         {
-            var articleId = Convert.ToInt64(HttpContext.Request.RouteValues["id"]);
+            var id = Convert.ToInt64(HttpContext.Request.RouteValues["id"]);
 
             var applicationUser = await _userManager.GetUserAsync(HttpContext.User);
 
-            var article = await _repository.GetByIdAsync(articleId);
-
-            if (applicationUser.UserRefId != article.AuthorId)
+            if (applicationUser.UserRefId != id)
             {
                 context.Fail();
             }

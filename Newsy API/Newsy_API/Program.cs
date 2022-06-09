@@ -105,9 +105,12 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("MyArticles",
         policy => policy.Requirements.Add(new MyArticlesRequirement()));
+    options.AddPolicy("MyData",
+        policy => policy.Requirements.Add(new MyDataRequirement()));
 });
 
 builder.Services.AddScoped<IAuthorizationHandler, MyArticlesRequirementHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, MyDataRequirementHandler>();
 
 //configure logging
 //TODO: can be done better and easier to read
