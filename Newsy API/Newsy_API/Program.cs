@@ -44,7 +44,7 @@ builder.Logging.AddSimpleConsole(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction() /*Only for Five purposes*/)
 {
     app.UseSwagger();
     app.UseSwaggerUI();
