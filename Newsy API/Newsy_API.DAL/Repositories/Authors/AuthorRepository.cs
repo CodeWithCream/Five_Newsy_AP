@@ -4,7 +4,7 @@ using Newsy_API.DAL.Exceptions;
 using Newsy_API.Model;
 using Newtonsoft.Json;
 
-namespace Newsy_API.DAL.Repositories
+namespace Newsy_API.DAL.Repositories.Authors
 {
     public class AuthorRepository : RepositoryBase, IAuthorRepository
     {

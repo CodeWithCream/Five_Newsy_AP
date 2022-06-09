@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using Newsy_API.DAL.Exceptions;
 
@@ -33,6 +34,11 @@ namespace Newsy_API.DAL.Repositories
                 _logger.LogError(e, "Error while saving changes.");
                 throw new Exception("Error while saving changes.");
             }
+        }
+
+        public IDbContextTransaction BeginTransaction()
+        {
+            return _context.Database.BeginTransaction();
         }
     }
 }

@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newsy_API.DAL.Exceptions;
-using Newsy_API.DAL.Repositories;
+using Newsy_API.DAL.Repositories.Articles;
 using Newsy_API.DTOs;
 using Newsy_API.DTOs.Article;
 using Newsy_API.Model;
@@ -10,7 +10,6 @@ using Newtonsoft.Json;
 
 namespace Newsy_API.Controllers
 {
-    [AllowAnonymous]
     [Route("api/[controller]")]
     [Produces("application/json")]
     [ApiController]
@@ -27,6 +26,7 @@ namespace Newsy_API.Controllers
             _logger = logger;
         }
 
+        [Authorize]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -56,6 +56,7 @@ namespace Newsy_API.Controllers
                     articlesCount));
         }
 
+        [Authorize]
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -78,11 +79,11 @@ namespace Newsy_API.Controllers
             }
         }
 
-
+        [Authorize(Roles = "Author")]
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
-        public async Task<ActionResult<CreateArticleDto>> PostReport(CreateArticleDto createArticleDto)
+        public async Task<ActionResult<CreateArticleDto>> PostArticle(CreateArticleDto createArticleDto)
         {
             _logger.LogInformation($"Creating new article: {JsonConvert.SerializeObject(createArticleDto)}.");
 
@@ -110,6 +111,7 @@ namespace Newsy_API.Controllers
             }
         }
 
+        [Authorize(Roles = "Author", Policy = "MyArticles")]
         [HttpPatch("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -138,6 +140,7 @@ namespace Newsy_API.Controllers
             }
         }
 
+        [Authorize(Roles = "Author", Policy = "MyArticles")]
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

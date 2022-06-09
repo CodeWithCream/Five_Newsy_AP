@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newsy_API.DAL.Exceptions;
-using Newsy_API.DAL.Repositories;
+using Newsy_API.DAL.Repositories.Authors;
 using Newsy_API.DTOs.Article;
 using Newsy_API.DTOs.Author;
 using Newsy_API.Model;
@@ -24,7 +24,7 @@ namespace Newsy_API.Controllers
             _logger = logger;
         }
 
-        [AllowAnonymous]
+        [Authorize]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -37,6 +37,7 @@ namespace Newsy_API.Controllers
             return new OkObjectResult(_mapper.Map<IEnumerable<Author>, IEnumerable<AuthorBasicDto>>(authors));
         }
 
+        [Authorize]
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -59,6 +60,7 @@ namespace Newsy_API.Controllers
             }
         }
 
+        [Authorize]
         [HttpGet("{id}/articles")]
         public async Task<ActionResult<IEnumerable<ArticleDto>>> GetArticles(long id)
         {

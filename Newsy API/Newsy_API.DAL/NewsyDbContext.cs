@@ -10,6 +10,7 @@ namespace Newsy_API.DAL
     {
         public DbSet<Author> Authors { get; set; } = null!;
         public DbSet<Article> Articles { get; set; } = null!;
+        public DbSet<User> Readers { get; set; } = null!;
 
         public NewsyDbContext(DbContextOptions options) : base(options)
         {

@@ -1,6 +1,6 @@
 ﻿using Newsy_API.Model;
 
-namespace Newsy_API.DAL.Repositories
+namespace Newsy_API.DAL.Repositories.Articles
 {
     public interface IArticleRepository : IRepository<Article>
     {
