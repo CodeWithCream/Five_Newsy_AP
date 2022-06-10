@@ -77,8 +77,9 @@ namespace Newsy_API.Controllers
             }
 
             var communicationToken = await LogInAsync(applicationUser);
+            var userType = applicationUser.User is Author ? ApplicationUserRoles.Author : ApplicationUserRoles.Reader;
 
-            return Ok(new UserLoggedInDto() { Token = communicationToken, UserId = applicationUser.UserRefId });
+            return Ok(new UserLoggedInDto() { Token = communicationToken, UserId = applicationUser.UserRefId, UserType = userType.ToString() });
         }
 
         [HttpPost("register")]
@@ -117,8 +118,9 @@ namespace Newsy_API.Controllers
                     var confirmResult = await _userManager.ConfirmEmailAsync(applicationUser, emailToken);
 
                     var communicationToken = await LogInAsync(applicationUser);
+                    var userType = user is Author ? ApplicationUserRoles.Author : ApplicationUserRoles.Reader;
 
-                    var registrationData = new UserLoggedInDto() { Token = communicationToken, UserId = applicationUser.UserRefId };
+                    var registrationData = new UserLoggedInDto() { Token = communicationToken, UserId = applicationUser.UserRefId, UserType = userType.ToString() };
                     return Ok(registrationData);
                 }
                 catch (Exception e)
