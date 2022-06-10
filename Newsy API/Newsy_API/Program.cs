@@ -77,6 +77,18 @@ builder.Services.Configure<TokenSettings>(tokenSettingsSection);
 var tokenSettings = tokenSettingsSection.Get<TokenSettings>();
 var key = Encoding.ASCII.GetBytes(tokenSettings.Secret);
 
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy.AllowAnyOrigin()
+                                .AllowAnyHeader()
+                                .AllowAnyMethod();
+                      });
+});
+
 // Add services to the container.
 builder.Services.AddAuthentication(options =>
 {
@@ -132,6 +144,7 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction() /*Only for
 }
 
 app.UseHttpsRedirection();
+app.UseCors(MyAllowSpecificOrigins);
 
 app.UseAuthentication();
 app.UseAuthorization();
